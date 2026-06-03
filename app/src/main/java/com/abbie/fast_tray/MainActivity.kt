@@ -1,6 +1,7 @@
 package com.abbie.fast_tray
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -8,6 +9,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.setValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -15,10 +18,26 @@ import androidx.navigation.compose.rememberNavController
 import com.abbie.fast_tray.ui.theme.FasttrayTheme
 import com.abbie.fast_tray.viewmodels.MainViewModel
 import com.abbie.fast_tray.views.*
+import com.abbie.fast_tray.API.ApiClient
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        lifecycleScope.launch {
+            try {
+                // Ambil response (objek keseluruhan)
+                val response = ApiClient.instance.getUsers()
+
+                // Ekstrak list user dari property "data"
+                val users = response.data
+
+                Log.d("API_TEST", "BERHASIL KONEK BOS! Jumlah user: ${users.size}")
+            } catch (e: Exception) {
+                Log.e("API_TEST", "GAGAL KONEK: ${e.message}")
+            }
+        }
+
         enableEdgeToEdge()
         setContent {
             val viewModel = remember { MainViewModel() }

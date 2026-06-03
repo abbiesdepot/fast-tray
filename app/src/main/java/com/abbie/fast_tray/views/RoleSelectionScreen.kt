@@ -217,7 +217,7 @@ fun RoleSelectionScreen(
 
                     if (selectedRole == UserRole.STUDENT) {
                         item {
-                            Divider(modifier = Modifier.padding(vertical = 8.dp))
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                             Text(
                                 text = "Or Create New Student Account",
                                 fontSize = 12.sp,
@@ -271,13 +271,21 @@ fun RoleSelectionScreen(
                             UserRole.ADMIN -> onNavigateToAdmin()
                             null -> {}
                         }
+//                    } else if (selectedRole == UserRole.STUDENT && customName.isNotBlank()) {
+//                        val success = viewModel.loginDemoUser(customName, UserRole.STUDENT)
+//                        if (success) {
+//                            onNavigateToStudent()
+//                        } else {
+//                            loginError = "Failed to create student account."
+//                        }
+//                    } else {
+//                        loginError = "Please select or create an account."
+//                    }
                     } else if (selectedRole == UserRole.STUDENT && customName.isNotBlank()) {
-                        val success = viewModel.loginDemoUser(customName, UserRole.STUDENT)
-                        if (success) {
-                            onNavigateToStudent()
-                        } else {
-                            loginError = "Failed to create student account."
-                        }
+                        // Panggil fungsi login tanpa menampungnya ke dalam variabel
+                        viewModel.loginDemoUser(customName, UserRole.STUDENT)
+                        // Langsung navigasi ke halaman Student
+                        onNavigateToStudent()
                     } else {
                         loginError = "Please select or create an account."
                     }
