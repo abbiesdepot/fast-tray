@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.abbie.fast_tray.models.User
@@ -348,4 +349,15 @@ fun RoleCard(
             )
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun RoleSelectionScreenPreview() {
+    RoleSelectionScreen(
+        viewModel = MainViewModel(), 
+        onNavigateToStudent = {},
+        onNavigateToOwner = {},
+        onNavigateToAdmin = {}
+    )
 }
