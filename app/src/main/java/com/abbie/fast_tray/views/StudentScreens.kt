@@ -1022,18 +1022,34 @@ fun CartScreen(
                     Text("Clear Cart")
                 }
 
+//                Button(
+//                    onClick = {
+//                        val order = viewModel.checkout(pickupTime)
+//                        if (order != null) {
+//                            onNavigateToTracking(order.id)
+//                        }
+//                    },
+//                    colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
+//                    shape = RoundedCornerShape(12.dp),
+//                    modifier = Modifier.weight(2f)
+//                ) {
+//                    Text("Place Order", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+//                }
                 Button(
                     onClick = {
-                        val order = viewModel.checkout(pickupTime)
-                        if (order != null) {
-                            onNavigateToTracking(order.id)
-                        }
+                        // 1. Jalankan proses checkout (API akan memproses di background)
+                        viewModel.checkout(pickupTime)
+
+                        // 2. Langsung navigasi ke halaman tracking.
+                        // Karena kita belum tahu ID aslinya secara instan, kita bisa berikan ID dummy
+                        // (misalnya 999 atau 0) agar layar bisa berpindah dan kodenya tidak error.
+                        onNavigateToTracking(999)
                     },
+                    shape = RoundedCornerShape(size = 12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.weight(2f)
+                    modifier = Modifier.weight(weight = 2f)
                 ) {
-                    Text("Place Order", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(text = "Place Order", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
         }

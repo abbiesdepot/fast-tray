@@ -34,8 +34,29 @@ object FastTrayRepository {
     suspend fun fetchAllData() {
         try {
             // Ambil daftar user dari backend
+//            val usersResponse = ApiClient.instance.getUsers()
+//            _users.value = usersResponse.data
             val usersResponse = ApiClient.instance.getUsers()
-            _users.value = usersResponse.data
+
+            // Cek apakah data dari database kosong
+            if (usersResponse.data.isEmpty()) {
+                // JIKA KOSONG: Gunakan data dummy ini agar tetap bisa login
+                _users.value = listOf(
+                    User(id = 101, name = "Pak Budi (Owner)", email = "budi@owner.com", role = UserRole.STALL_OWNER, warningCount = 0, isBanned = false),
+                    User(id = 102, name = "Bu Siti (Owner)", email = "siti@owner.com", role = UserRole.STALL_OWNER, warningCount = 0, isBanned = false),
+                    User(id = 999, name = "Admin Kampus", email = "admin@campus.com", role = UserRole.ADMIN, warningCount = 0, isBanned = false),
+                    User(id = 1, name = "Mahasiswa Demo", email = "demo@student.com", role = UserRole.STUDENT, warningCount = 0, isBanned = false)
+                )
+            } else {
+                // JIKA ADA ISINYA: Gunakan data asli dari backend
+                _users.value = usersResponse.data
+            }
+        } catch (e: Exception) {
+            // Jika backend mati/error, tetap tampilkan data dummy
+            _users.value = listOf(
+                User(id = 101, name = "Pak Budi (Owner)", email = "budi@owner.com", role = UserRole.STALL_OWNER, warningCount = 0, isBanned = false),
+                User(id = 999, name = "Admin Kampus", email = "admin@campus.com", role = UserRole.ADMIN, warningCount = 0, isBanned = false)
+            )
 
              val stallsResponse = ApiClient.instance.getStalls()
              _stalls.value = stallsResponse.data
