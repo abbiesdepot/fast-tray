@@ -21,7 +21,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.abbie.fast_tray.models.User
@@ -175,8 +174,10 @@ fun RoleSelectionScreen(
                                 .clickable {
                                     if (user.isBanned) {
                                         loginError = "This account is banned due to warning policy."
+                                        selectedUser = null // FIX: Prevent logged-in bypassing state
                                     } else {
                                         selectedUser = user
+                                        customName = "" // Clear custom input if picking an existing user
                                         loginError = null
                                     }
                                 },
@@ -217,7 +218,7 @@ fun RoleSelectionScreen(
 
                     if (selectedRole == UserRole.STUDENT) {
                         item {
-                            Divider(modifier = Modifier.padding(vertical = 8.dp))
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = BorderColor) // FIX: Material 3 replacement
                             Text(
                                 text = "Or Create New Student Account",
                                 fontSize = 12.sp,
@@ -249,7 +250,7 @@ fun RoleSelectionScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // kl error
+            // Error display
             if (loginError != null) {
                 Text(
                     text = loginError ?: "",
@@ -349,15 +350,4 @@ fun RoleCard(
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun RoleSelectionScreenPreview() {
-    RoleSelectionScreen(
-        viewModel = MainViewModel(), 
-        onNavigateToStudent = {},
-        onNavigateToOwner = {},
-        onNavigateToAdmin = {}
-    )
 }

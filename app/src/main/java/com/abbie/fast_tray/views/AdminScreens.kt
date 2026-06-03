@@ -23,6 +23,30 @@ import androidx.compose.ui.window.Dialog
 import com.abbie.fast_tray.models.*
 import com.abbie.fast_tray.ui.theme.*
 import com.abbie.fast_tray.viewmodels.MainViewModel
+import androidx.compose.runtime.saveable.rememberSaveable
+
+@Composable
+fun AdminDashboardScreen(
+    viewModel: MainViewModel,
+    onLogout: () -> Unit
+) {
+    var currentTab by rememberSaveable { mutableStateOf("users") }
+
+    AdminScaffold(
+        viewModel = viewModel,
+        currentTab = currentTab,
+        onTabSelected = { currentTab = it },
+        onLogout = onLogout,
+        content = { padding ->
+            Box(modifier = Modifier.padding(padding)) {
+                when (currentTab) {
+                    "users" -> AdminUserManagementScreen(viewModel = viewModel)
+                    "stalls" -> AdminStallManagementScreen(viewModel = viewModel)
+                }
+            }
+        }
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Suppress("UNUSED_PARAMETER", "DEPRECATION")
@@ -103,7 +127,7 @@ fun AdminScaffold(
     )
 }
 
-// user management
+// User Management Screen
 @Composable
 fun AdminUserManagementScreen(
     viewModel: MainViewModel
@@ -133,7 +157,7 @@ fun AdminUserManagementScreen(
 
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.weight(1f).fillMaxWidth() // FIX: Set layout constraints safely
         ) {
             items(users) { user ->
                 Card(
@@ -234,7 +258,7 @@ fun AdminUserManagementScreen(
     }
 }
 
-// stall management
+// Stall Management Screen
 @Composable
 fun AdminStallManagementScreen(
     viewModel: MainViewModel
@@ -283,7 +307,7 @@ fun AdminStallManagementScreen(
 
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.weight(1f).fillMaxWidth() // FIX: Keeps full layout flexible dynamically
         ) {
             items(stalls) { stall ->
                 val owner = users.firstOrNull { it.id == stall.ownerId }
@@ -422,7 +446,7 @@ fun AdminStallManagementScreen(
                         DropdownMenu(
                             expanded = ownerDropdownExpanded,
                             onDismissRequest = { ownerDropdownExpanded = false },
-                            modifier = Modifier.fillMaxWidth(0.9f)
+                            modifier = Modifier.fillMaxWidth(0.85f).align(Alignment.TopStart) // FIX: Stabilizes overlay alignment
                         ) {
                             owners.forEach { own ->
                                 DropdownMenuItem(
