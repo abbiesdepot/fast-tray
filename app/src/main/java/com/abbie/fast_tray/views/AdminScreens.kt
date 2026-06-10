@@ -25,7 +25,6 @@ import com.abbie.fast_tray.ui.theme.*
 import com.abbie.fast_tray.viewmodels.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Suppress("UNUSED_PARAMETER", "DEPRECATION")
 @Composable
 fun AdminScaffold(
     viewModel: MainViewModel,
@@ -103,11 +102,11 @@ fun AdminScaffold(
     )
 }
 
-// user management
+// ==========================================
+// USER MANAGEMENT TAB
+// ==========================================
 @Composable
-fun AdminUserManagementScreen(
-    viewModel: MainViewModel
-) {
+fun AdminUserManagementScreen(viewModel: MainViewModel) {
     val users by viewModel.users.collectAsState()
     val context = LocalContext.current
 
@@ -135,7 +134,7 @@ fun AdminUserManagementScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            items(users) { user ->
+            items(users, key = { it.id }) { user ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -148,7 +147,7 @@ fun AdminUserManagementScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = user.name,
                                     fontWeight = FontWeight.Bold,
@@ -198,14 +197,14 @@ fun AdminUserManagementScreen(
                                     OutlinedButton(
                                         onClick = {
                                             viewModel.warnUserAccount(user.id)
-                                            Toast.makeText(context, "Warning issued.", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "Warning issued to ${user.name}.", Toast.LENGTH_SHORT).show()
                                         },
                                         border = BorderStroke(1.dp, ColorWarning),
                                         colors = ButtonDefaults.outlinedButtonColors(contentColor = ColorWarning),
                                         shape = RoundedCornerShape(8.dp),
                                         modifier = Modifier.height(36.dp)
                                     ) {
-                                        Text(text = "Warn", fontSize = 11.sp)
+                                        Text(text = "Warn", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
 
@@ -213,7 +212,7 @@ fun AdminUserManagementScreen(
                                     onClick = {
                                         viewModel.toggleBanUserAccount(user.id)
                                         val status = if (!user.isBanned) "banned" else "unbanned"
-                                        Toast.makeText(context, "User $status.", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "User ${user.name} $status.", Toast.LENGTH_SHORT).show()
                                     },
                                     colors = ButtonDefaults.buttonColors(containerColor = if (user.isBanned) ColorSuccess else ColorDanger),
                                     shape = RoundedCornerShape(8.dp),
@@ -222,7 +221,8 @@ fun AdminUserManagementScreen(
                                     Text(
                                         text = if (user.isBanned) "Unban" else "Ban",
                                         fontSize = 11.sp,
-                                        color = Color.White
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
                                     )
                                 }
                             }
@@ -234,11 +234,12 @@ fun AdminUserManagementScreen(
     }
 }
 
-// stall management
+// ==========================================
+// STALL MANAGEMENT TAB
+// ==========================================
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminStallManagementScreen(
-    viewModel: MainViewModel
-) {
+fun AdminStallManagementScreen(viewModel: MainViewModel) {
     val stalls by viewModel.stalls.collectAsState()
     val users by viewModel.users.collectAsState()
     var showRegisterDialog by remember { mutableStateOf(false) }
@@ -285,7 +286,7 @@ fun AdminStallManagementScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            items(stalls) { stall ->
+            items(stalls, key = { it.id }) { stall ->
                 val owner = users.firstOrNull { it.id == stall.ownerId }
 
                 Card(
@@ -300,13 +301,14 @@ fun AdminStallManagementScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = stall.name,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp,
                                     color = SlateMedium
                                 )
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = "Location: ${stall.location}",
                                     fontSize = 12.sp,
@@ -324,12 +326,17 @@ fun AdminStallManagementScreen(
                                 onCheckedChange = { viewModel.toggleStallOpenClosed(stall.id) },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = OrangePrimary,
-                                    checkedTrackColor = OrangeLight
+                                    checkedTrackColor = OrangeLight,
+                                    uncheckedThumbColor = SlateLight,
+                                    uncheckedTrackColor = BorderColor
                                 )
                             )
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
+                        HorizontalDivider(color = BorderColor)
+                        Spacer(modifier = Modifier.height(8.dp))
+
                         Text(
                             text = stall.description,
                             fontSize = 12.sp,
@@ -342,6 +349,7 @@ fun AdminStallManagementScreen(
         }
     }
 
+    // Modal Dialog Register Food Stall
     if (showRegisterDialog) {
         var name by remember { mutableStateOf("") }
         var desc by remember { mutableStateOf("") }
@@ -350,7 +358,6 @@ fun AdminStallManagementScreen(
         val owners = users.filter { it.role == UserRole.STALL_OWNER }
         var selectedOwner by remember { mutableStateOf(owners.firstOrNull()) }
         var ownerDropdownExpanded by remember { mutableStateOf(false) }
-
         var validationErr by remember { mutableStateOf(false) }
         val context = LocalContext.current
 
@@ -360,11 +367,11 @@ fun AdminStallManagementScreen(
                 colors = CardDefaults.cardColors(containerColor = WhiteSurface),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(8.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Text(
                         text = "Register Food Stall",
@@ -375,72 +382,86 @@ fun AdminStallManagementScreen(
 
                     OutlinedTextField(
                         value = name,
-                        onValueChange = { name = it },
+                        onValueChange = { name = it; validationErr = false },
                         label = { Text("Stall Name") },
                         singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary, focusedLabelColor = OrangePrimary),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     OutlinedTextField(
                         value = desc,
-                        onValueChange = { desc = it },
+                        onValueChange = { desc = it; validationErr = false },
                         label = { Text("Description") },
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary),
+                        maxLines = 3,
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary, focusedLabelColor = OrangePrimary),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     OutlinedTextField(
                         value = loc,
-                        onValueChange = { loc = it },
+                        onValueChange = { loc = it; validationErr = false },
                         label = { Text("Location (e.g. Block C, Level 1)") },
                         singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary),
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary, focusedLabelColor = OrangePrimary),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedButton(
-                            onClick = { ownerDropdownExpanded = true },
+                    // Dropdown Owner Selector Component
+                    ExposedDropdownMenuBox(
+                        expanded = ownerDropdownExpanded,
+                        onExpandedChange = { ownerDropdownExpanded = it }
+                    ) {
+                        OutlinedTextField(
+                            value = selectedOwner?.name ?: "Select Owner",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Stall Owner") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = ownerDropdownExpanded) },
+                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary, focusedLabelColor = OrangePrimary),
                             shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, BorderColor),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(text = "Owner: ${selectedOwner?.name ?: "Select Owner"}", color = SlateMedium)
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = "Expand", tint = SlateMedium)
-                            }
-                        }
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor()
+                        )
 
-                        DropdownMenu(
+                        ExposedDropdownMenu(
                             expanded = ownerDropdownExpanded,
-                            onDismissRequest = { ownerDropdownExpanded = false },
-                            modifier = Modifier.fillMaxWidth(0.9f)
+                            onDismissRequest = { ownerDropdownExpanded = false }
                         ) {
-                            owners.forEach { own ->
+                            if (owners.isEmpty()) {
                                 DropdownMenuItem(
-                                    text = { Text(own.name) },
-                                    onClick = {
-                                        selectedOwner = own
-                                        ownerDropdownExpanded = false
-                                    }
+                                    text = { Text("No available owners found", color = SlateLight) },
+                                    onClick = {}
                                 )
+                            } else {
+                                owners.forEach { own ->
+                                    DropdownMenuItem(
+                                        text = { Text(own.name) },
+                                        onClick = {
+                                            selectedOwner = own
+                                            ownerDropdownExpanded = false
+                                            validationErr = false
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
 
                     if (validationErr) {
-                        Text(text = "Please fill in all details.", color = ColorDanger, fontSize = 11.sp)
+                        Text(
+                            text = "Please fill in all details correctly.",
+                            color = ColorDanger,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -451,7 +472,7 @@ fun AdminStallManagementScreen(
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Cancel")
+                            Text("Cancel", color = SlateMedium)
                         }
 
                         Button(
@@ -459,14 +480,14 @@ fun AdminStallManagementScreen(
                                 if (name.isNotBlank() && desc.isNotBlank() && loc.isNotBlank() && selectedOwner != null) {
                                     viewModel.registerNewStall(name, desc, loc, selectedOwner!!.id)
                                     showRegisterDialog = false
-                                    Toast.makeText(context, "Stall registered.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Stall '$name' registered successfully.", Toast.LENGTH_SHORT).show()
                                 } else {
                                     validationErr = true
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
                             shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.weight(1.5f)
+                            modifier = Modifier.weight(1.2f)
                         ) {
                             Text("Register", color = Color.White)
                         }
