@@ -1024,9 +1024,8 @@ fun CartScreen(
 
                 Button(
                     onClick = {
-                        val order = viewModel.checkout(pickupTime)
-                        if (order != null) {
-                            onNavigateToTracking(order.id)
+                        viewModel.checkout(pickupTime) { orderId ->
+                            onNavigateToTracking(orderId)
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
@@ -1245,7 +1244,7 @@ fun OrderTrackingScreen(
 
         if (order.status == OrderStatus.PENDING) {
             Button(
-                onClick = { viewModel.cancelOrder(order.id) },
+                onClick = { viewModel.cancelOrder(order.id, order.stallId) },
                 colors = ButtonDefaults.buttonColors(containerColor = ColorDanger),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -1254,7 +1253,7 @@ fun OrderTrackingScreen(
             }
         } else if (order.status == OrderStatus.READY) {
             Button(
-                onClick = { viewModel.completeOrder(order.id) },
+                onClick = { viewModel.completeOrder(order.id, order.stallId) },
                 colors = ButtonDefaults.buttonColors(containerColor = ColorSuccess),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -1287,11 +1286,11 @@ fun OrderTrackingScreen(
                             coroutineScope.launch {
                                 simState = "Simulating..."
                                 if (order.status == OrderStatus.PENDING) {
-                                    viewModel.acceptOrder(order.id)
+                                    viewModel.acceptOrder(order.id, order.stallId)
                                     delay(4000)
                                 }
                                 if (orders.firstOrNull { it.id == orderId }?.status == OrderStatus.PREPARING) {
-                                    viewModel.markOrderAsReady(order.id)
+                                    viewModel.markOrderAsReady(order.id, order.stallId)
                                 }
                                 simState = "Ready to Simulate"
                             }

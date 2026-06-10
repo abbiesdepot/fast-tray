@@ -278,7 +278,7 @@ fun OrderQueueScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Button(
-                                onClick = { viewModel.acceptOrder(order.id) },
+                                onClick = { viewModel.acceptOrder(order.id, activeStallId) },
                                 colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
                                 shape = RoundedCornerShape(8.dp),
                                 modifier = Modifier.weight(1f)
@@ -407,7 +407,7 @@ fun OrderQueueScreen(
 
                         if (order.status == OrderStatus.PREPARING) {
                             Button(
-                                onClick = { viewModel.markOrderAsReady(order.id) },
+                                onClick = { viewModel.markOrderAsReady(order.id, activeStallId) },
                                 colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
                                 shape = RoundedCornerShape(8.dp),
                                 modifier = Modifier.fillMaxWidth()
@@ -416,7 +416,7 @@ fun OrderQueueScreen(
                             }
                         } else if (order.status == OrderStatus.READY) {
                             Button(
-                                onClick = { viewModel.completeOrder(order.id) },
+                                onClick = { viewModel.completeOrder(order.id, activeStallId) },
                                 colors = ButtonDefaults.buttonColors(containerColor = ColorSuccess),
                                 shape = RoundedCornerShape(8.dp),
                                 modifier = Modifier.fillMaxWidth()
@@ -560,7 +560,7 @@ fun OrderQueueScreen(
                                 if (reasonText.trim().isEmpty()) {
                                     showErr = true
                                 } else {
-                                    viewModel.rejectOrder(selectedOrderForRejection!!.id, reasonText)
+                                    viewModel.rejectOrder(selectedOrderForRejection!!.id, activeStallId, reasonText)
                                     selectedOrderForRejection = null
                                     Toast.makeText(context, "Order rejected.", Toast.LENGTH_SHORT).show()
                                 }
@@ -953,8 +953,12 @@ fun SalesSummaryScreen(
     viewModel: MainViewModel
 ) {
     val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-    val summary = viewModel.getActiveSalesSummary(dateStr)
+    val summary by viewModel.salesSummary.collectAsState()
     val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchActiveSalesSummary()
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -991,7 +995,7 @@ fun SalesSummaryScreen(
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(text = "TOTAL REVENUE", color = OrangePrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                         Text(
-                            text = "$${String.format(Locale.US, "%.2f", summary.totalRevenue)}",
+                            text = "$${String.format(Locale.US, "%.2f", summary?.totalRevenue ?: 0.0)}",
                             color = Color.White,
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold
@@ -1012,7 +1016,7 @@ fun SalesSummaryScreen(
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(text = "TOTAL ORDERS", color = SlateLight, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                            Text(text = summary.totalOrders.toString(), color = SlateMedium, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Text(text = (summary?.totalOrders ?: 0).toString(), color = SlateMedium, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                             Text(text = "Frequency: High", color = SlateLight, fontSize = 9.sp)
                         }
                     }
@@ -1025,8 +1029,8 @@ fun SalesSummaryScreen(
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(text = "COMPLETED", color = ColorSuccess, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                            Text(text = summary.completedOrders.toString(), color = SlateMedium, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                            val rate = if (summary.totalOrders > 0) (summary.completedOrders * 100 / summary.totalOrders) else 100
+                            Text(text = (summary?.completedOrders ?: 0).toString(), color = SlateMedium, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            val rate = if ((summary?.totalOrders ?: 0) > 0) ((summary?.completedOrders ?: 0) * 100 / (summary?.totalOrders ?: 1)) else 100
                             Text(text = "Rate: $rate%", color = ColorSuccess, fontSize = 9.sp)
                         }
                     }
@@ -1039,8 +1043,8 @@ fun SalesSummaryScreen(
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(text = "CANCEL/REJECT", color = ColorDanger, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                            Text(text = (summary.cancelledOrders + summary.rejectedOrders).toString(), color = SlateMedium, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                            val loss = (summary.cancelledOrders + summary.rejectedOrders) * 12.0
+                            Text(text = ((summary?.cancelledOrders ?: 0) + (summary?.rejectedOrders ?: 0)).toString(), color = SlateMedium, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            val loss = ((summary?.cancelledOrders ?: 0) + (summary?.rejectedOrders ?: 0)) * 12.0
                             Text(text = "Loss: -$${String.format(Locale.US, "%.0f", loss)}", color = ColorDanger, fontSize = 9.sp)
                         }
                     }
@@ -1078,30 +1082,12 @@ fun SalesSummaryScreen(
                     }
                     Divider(color = BorderColor)
 
-                    if (summary.topSellingItems.isEmpty()) {
-                        val mockTops = listOf(
-                            TopSellingItem(1, "Spicy Chicken Donburi", 112, 1064.0),
-                            TopSellingItem(2, "Truffle Mushroom Pasta", 89, 979.0),
-                            TopSellingItem(3, "Classic Beef Burger", 78, 663.0),
-                            TopSellingItem(4, "Iced Matcha Latte", 65, 357.50),
-                            TopSellingItem(5, "Golden Fried Gyoza", 48, 264.0)
-                        )
-                        mockTops.forEachIndexed { idx, item ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(text = "0${idx + 1}  ${item.menuItemName}", fontSize = 12.sp, color = SlateMedium, modifier = Modifier.weight(1.5f), fontWeight = FontWeight.Medium)
-                                Text(text = item.quantitySold.toString(), fontSize = 12.sp, color = SlateMedium, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-                                Text(text = "$${String.format(Locale.US, "%.2f", item.revenue)}", fontSize = 12.sp, color = OrangePrimary, modifier = Modifier.weight(1f), textAlign = TextAlign.End, fontWeight = FontWeight.Bold)
-                            }
-                            Divider(color = BorderColor.copy(alpha = 0.5f))
+                    if (summary?.topSellingItems?.isEmpty() != false) {
+                        Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                            Text(text = "No sales data yet.", color = SlateLight, fontSize = 12.sp)
                         }
                     } else {
-                        summary.topSellingItems.forEachIndexed { idx, item ->
+                        summary!!.topSellingItems.forEachIndexed { idx, item ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()

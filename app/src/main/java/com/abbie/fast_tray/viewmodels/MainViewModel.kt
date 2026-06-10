@@ -19,9 +19,7 @@ class MainViewModel : ViewModel() {
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
-    @Suppress("unused")
     private val _currentRole = MutableStateFlow<UserRole?>(null)
-    @Suppress("unused")
     val currentRole: StateFlow<UserRole?> = _currentRole.asStateFlow()
 
     private val _ownerActiveStallId = MutableStateFlow<Int>(1)
@@ -40,23 +38,33 @@ class MainViewModel : ViewModel() {
     private val _cartStallId = MutableStateFlow<Int?>(null)
     val cartStallId: StateFlow<Int?> = _cartStallId.asStateFlow()
 
-    @Suppress("unused")
+    private val _salesSummary = MutableStateFlow<SalesSummary?>(null)
+    val salesSummary: StateFlow<SalesSummary?> = _salesSummary.asStateFlow()
+
     private val _searchQuery = MutableStateFlow("")
-    @Suppress("unused")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
-    @Suppress("unused")
     private val _selectedCategory = MutableStateFlow("All")
-    @Suppress("unused")
     val selectedCategory: StateFlow<String> = _selectedCategory.asStateFlow()
 
     init {
         viewModelScope.launch {
+            // Fetch initial data
+            repository.fetchStalls()
+            repository.fetchUsers()
+
             currentUser.collect { user ->
-                if (user != null && user.role == UserRole.STALL_OWNER) {
-                    val stall = stalls.value.firstOrNull { it.ownerId == user.id }
-                    if (stall != null) {
-                        _ownerActiveStallId.value = stall.id
+                if (user != null) {
+                    // Fetch relevant data based on user type
+                    if (user.role == UserRole.STUDENT) {
+                        repository.fetchStudentOrders(user.id)
+                    } else if (user.role == UserRole.STALL_OWNER) {
+                        val stall = stalls.value.firstOrNull { it.ownerId == user.id }
+                        if (stall != null) {
+                            _ownerActiveStallId.value = stall.id
+                            repository.fetchStallQueue(stall.id)
+                            repository.fetchMenuItems(stall.id)
+                        }
                     }
                 }
             }
@@ -71,15 +79,14 @@ class MainViewModel : ViewModel() {
         clearCart()
     }
 
-    fun loginDemoUser(username: String, role: UserRole): Boolean {
-        val user = repository.login(username, role)
-        return if (user != null) {
-            _currentUser.value = user
-            _currentRole.value = role
-            clearCart()
-            true
-        } else {
-            false
+    fun loginDemoUser(username: String, role: UserRole) {
+        viewModelScope.launch {
+            val user = repository.login(username, role)
+            if (user != null) {
+                _currentUser.value = user
+                _currentRole.value = role
+                clearCart()
+            }
         }
     }
 
@@ -93,7 +100,6 @@ class MainViewModel : ViewModel() {
 
     fun addToCart(item: MenuItem, quantity: Int, notes: String): Boolean {
         if (_cartStallId.value != null && _cartStallId.value != item.stallId) {
-            // Cannot add items from different stalls. Caller can prompt to clear cart.
             return false
         }
 
@@ -134,100 +140,122 @@ class MainViewModel : ViewModel() {
         _cartStallId.value = null
     }
 
-    fun checkout(pickupTime: String): Order? {
-        val student = _currentUser.value ?: return null
-        val stallId = _cartStallId.value ?: return null
-        if (_cartItems.value.isEmpty()) return null
+    fun checkout(pickupTime: String, onOrderPlaced: (Int) -> Unit = {}) {
+        val student = _currentUser.value ?: return
+        val stallId = _cartStallId.value ?: return
+        if (_cartItems.value.isEmpty()) return
 
-        val order = repository.placeOrder(
-            studentId = student.id,
-            stallId = stallId,
-            cartItems = _cartItems.value,
-            pickupTime = pickupTime
-        )
-        if (order != null) {
-            clearCart()
+        viewModelScope.launch {
+            val order = repository.placeOrder(
+                studentId = student.id,
+                stallId = stallId,
+                cartItems = _cartItems.value,
+                pickupTime = pickupTime
+            )
+            if (order != null) {
+                clearCart()
+                onOrderPlaced(order.id)
+            }
         }
-        return order
     }
 
 //ngesearch
 
-    @Suppress("unused")
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
     }
 
-    @Suppress("unused")
     fun updateSelectedCategory(category: String) {
         _selectedCategory.value = category
     }
 
-//INI ORDER ACTIONS
-    fun cancelOrder(orderId: Int): Boolean {
-        // Student yg cancel
-        return repository.updateOrderStatus(orderId, OrderStatus.CANCELLED)
+    //INI ORDER ACTIONS
+    fun cancelOrder(orderId: Int, stallId: Int) {
+        viewModelScope.launch {
+            repository.updateOrderStatus(orderId, stallId, OrderStatus.CANCELLED)
+        }
     }
 
-    fun acceptOrder(orderId: Int): Boolean {
-        // Stall Owner accept
-        return repository.updateOrderStatus(orderId, OrderStatus.PREPARING)
+    fun acceptOrder(orderId: Int, stallId: Int) {
+        viewModelScope.launch {
+            repository.updateOrderStatus(orderId, stallId, OrderStatus.PREPARING)
+        }
     }
 
-    fun rejectOrder(orderId: Int, reason: String): Boolean {
-        // Stall Owner rejects order pake rsn
-        return repository.updateOrderStatus(orderId, OrderStatus.REJECTED, reason)
+    fun rejectOrder(orderId: Int, stallId: Int, reason: String) {
+        viewModelScope.launch {
+            repository.updateOrderStatus(orderId, stallId, OrderStatus.REJECTED, reason)
+        }
     }
 
-    fun markOrderAsReady(orderId: Int): Boolean {
-        // Stall Owner ready for pickup
-        return repository.updateOrderStatus(orderId, OrderStatus.READY)
+    fun markOrderAsReady(orderId: Int, stallId: Int) {
+        viewModelScope.launch {
+            repository.updateOrderStatus(orderId, stallId, OrderStatus.READY)
+        }
     }
 
-    fun completeOrder(orderId: Int): Boolean {
-        // kl student picks up order yauda status update complete
-        return repository.updateOrderStatus(orderId, OrderStatus.COMPLETED)
+    fun completeOrder(orderId: Int, stallId: Int) {
+        viewModelScope.launch {
+            repository.updateOrderStatus(orderId, stallId, OrderStatus.COMPLETED)
+        }
     }
 
 // PNY STALL OWNER
 
-    @Suppress("unused")
     fun setOwnerActiveStall(stallId: Int) {
         _ownerActiveStallId.value = stallId
+        viewModelScope.launch {
+            repository.fetchMenuItems(stallId)
+            repository.fetchStallQueue(stallId)
+        }
     }
 
     fun toggleStallOpenClosed(stallId: Int) {
-        repository.toggleStallActive(stallId)
+        viewModelScope.launch {
+            repository.toggleStallActive(stallId)
+        }
     }
 
     fun toggleMenuItemAvailability(itemId: Int) {
-        repository.toggleMenuItemAvailable(itemId)
+        viewModelScope.launch {
+            repository.toggleMenuItemAvailable(itemId, _ownerActiveStallId.value)
+        }
     }
 
     fun saveMenuItem(itemId: Int?, name: String, description: String, price: Double, category: String) {
         val stallId = _ownerActiveStallId.value
-        if (itemId != null) {
-            repository.updateMenuItem(itemId, name, description, price, category)
-        } else {
-            repository.addMenuItem(stallId, name, description, price, category)
+        viewModelScope.launch {
+            if (itemId != null) {
+                repository.updateMenuItem(itemId, stallId, name, description, price, category)
+            } else {
+                repository.addMenuItem(stallId, name, description, price, category)
+            }
         }
     }
 
-    fun getActiveSalesSummary(dateString: String = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())): SalesSummary {
-        val stallId = _ownerActiveStallId.value
-        return repository.getSalesSummary(stallId, dateString)
+    fun fetchActiveSalesSummary() {
+        viewModelScope.launch {
+            val stallId = _ownerActiveStallId.value
+            _salesSummary.value = repository.getSalesSummary(stallId)
+        }
     }
 
-//    INI ADMIN
+    //    INI ADMIN
     fun registerNewStall(name: String, description: String, location: String, ownerId: Int) {
-        repository.addStall(name, description, location, ownerId)
+        viewModelScope.launch {
+            repository.addStall(name, description, location, ownerId)
+        }
     }
 
     fun warnUserAccount(userId: Int) {
-        repository.warnUser(userId)
+        viewModelScope.launch {
+            repository.warnUser(userId)
+        }
     }
 
     fun toggleBanUserAccount(userId: Int) {
-        repository.toggleBanUser(userId)
+        viewModelScope.launch {
+            repository.toggleBanUser(userId)
+        }
     }
 }

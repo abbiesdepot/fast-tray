@@ -174,10 +174,10 @@ fun RoleSelectionScreen(
                                 .clickable {
                                     if (user.isBanned) {
                                         loginError = "This account is banned due to warning policy."
-                                        selectedUser = null // FIX: Prevent logged-in bypassing state
+                                        selectedUser = null
                                     } else {
                                         selectedUser = user
-                                        customName = "" // Clear custom input if picking an existing user
+                                        customName = ""
                                         loginError = null
                                     }
                                 },
@@ -218,7 +218,7 @@ fun RoleSelectionScreen(
 
                     if (selectedRole == UserRole.STUDENT) {
                         item {
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = BorderColor) // FIX: Material 3 replacement
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = BorderColor)
                             Text(
                                 text = "Or Create New Student Account",
                                 fontSize = 12.sp,
@@ -250,7 +250,6 @@ fun RoleSelectionScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Error display
             if (loginError != null) {
                 Text(
                     text = loginError ?: "",
@@ -261,7 +260,6 @@ fun RoleSelectionScreen(
                 )
             }
 
-            // launch
             Button(
                 onClick = {
                     if (selectedUser != null) {
@@ -273,12 +271,8 @@ fun RoleSelectionScreen(
                             null -> {}
                         }
                     } else if (selectedRole == UserRole.STUDENT && customName.isNotBlank()) {
-                        val success = viewModel.loginDemoUser(customName, UserRole.STUDENT)
-                        if (success) {
-                            onNavigateToStudent()
-                        } else {
-                            loginError = "Failed to create student account."
-                        }
+                        viewModel.loginDemoUser(customName, UserRole.STUDENT)
+                        onNavigateToStudent()
                     } else {
                         loginError = "Please select or create an account."
                     }
