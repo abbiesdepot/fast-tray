@@ -134,6 +134,7 @@ fun AdminUserManagementScreen(
 ) {
     val users by viewModel.users.collectAsState()
     val context = LocalContext.current
+    var showRegisterOwnerDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -141,23 +142,41 @@ fun AdminUserManagementScreen(
             .background(CreamBackground)
             .padding(16.dp)
     ) {
-        Text(
-            text = "User Accounts",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = SlateMedium
-        )
-        Text(
-            text = "Warnings and suspension manager",
-            fontSize = 12.sp,
-            color = SlateLight
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "User Accounts",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = SlateMedium
+                )
+                Text(
+                    text = "Warnings and suspension manager",
+                    fontSize = 12.sp,
+                    color = SlateLight
+                )
+            }
+            
+            Button(
+                onClick = { showRegisterOwnerDialog = true },
+                colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Owner", tint = Color.White)
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(text = "Add Owner", color = Color.White, fontSize = 12.sp)
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.weight(1f).fillMaxWidth() // FIX: Set layout constraints safely
+            modifier = Modifier.weight(1f).fillMaxWidth()
         ) {
             items(users) { user ->
                 Card(
@@ -249,6 +268,114 @@ fun AdminUserManagementScreen(
                                         color = Color.White
                                     )
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showRegisterOwnerDialog) {
+        var ownerName by remember { mutableStateOf("") }
+        var ownerEmail by remember { mutableStateOf("") }
+        var ownerPass by remember { mutableStateOf("") }
+        var registerError by remember { mutableStateOf<String?>(null) }
+        var isSubmitting by remember { mutableStateOf(false) }
+
+        Dialog(onDismissRequest = { showRegisterOwnerDialog = false }) {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = WhiteSurface),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Register Stall Owner",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = SlateMedium
+                    )
+
+                    OutlinedTextField(
+                        value = ownerName,
+                        onValueChange = { ownerName = it },
+                        label = { Text("Full Name") },
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    OutlinedTextField(
+                        value = ownerEmail,
+                        onValueChange = { ownerEmail = it },
+                        label = { Text("Email") },
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    OutlinedTextField(
+                        value = ownerPass,
+                        onValueChange = { ownerPass = it },
+                        label = { Text("Password") },
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    if (registerError != null) {
+                        Text(text = registerError!!, color = ColorDanger, fontSize = 11.sp)
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { showRegisterOwnerDialog = false },
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Cancel")
+                        }
+
+                        Button(
+                            onClick = {
+                                if (ownerName.isBlank() || ownerEmail.isBlank() || ownerPass.isBlank()) {
+                                    registerError = "Please fill in all details."
+                                    return@Button
+                                }
+                                isSubmitting = true
+                                viewModel.registerOwner(ownerName, ownerEmail, ownerPass) { success, msg ->
+                                    isSubmitting = false
+                                    if (success) {
+                                        showRegisterOwnerDialog = false
+                                        Toast.makeText(context, "Owner registered.", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        registerError = msg ?: "Failed to register."
+                                    }
+                                }
+                            },
+                            enabled = !isSubmitting,
+                            colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.weight(1.5f)
+                        ) {
+                            if (isSubmitting) {
+                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(16.dp))
+                            } else {
+                                Text("Register", color = Color.White)
                             }
                         }
                     }

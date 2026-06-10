@@ -81,10 +81,23 @@ object FastTrayRepository {
 
     // --- Actions ---
 
-    suspend fun login(username: String, role: UserRole): User? {
+    suspend fun login(email: String, password: String): User? {
         return try {
-            val response = api.login(LoginRequest(username, role.name))
+            val response = api.login(LoginRequest(email, password))
             if (response.isSuccessful) response.body()?.data else null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    suspend fun register(name: String, email: String, password: String, role: UserRole): User? {
+        return try {
+            val response = api.register(RegisterRequest(name, email, password, role.name))
+            if (response.isSuccessful) {
+                val newUser = response.body()?.data
+                fetchUsers()
+                newUser
+            } else null
         } catch (e: Exception) {
             null
         }

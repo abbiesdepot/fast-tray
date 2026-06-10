@@ -34,11 +34,11 @@ class MainActivity : ComponentActivity() {
                 ) {
                     // --- ROLE SELECTION ---
                     composable("role_selection") {
-                        RoleSelectionScreen(
+                        AuthScreen(
                             viewModel = viewModel,
-                            onNavigateToStudent = { navController.navigate("student_home") },
-                            onNavigateToOwner = { navController.navigate("owner_home") },
-                            onNavigateToAdmin = { navController.navigate("admin_home") }
+                            onNavigateToStudent = { navController.navigate("student_home") { popUpTo(0) } },
+                            onNavigateToOwner = { navController.navigate("owner_home") { popUpTo(0) } },
+                            onNavigateToAdmin = { navController.navigate("admin_home") { popUpTo(0) } }
                         )
                     }
 

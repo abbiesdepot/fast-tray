@@ -73,19 +73,45 @@ class MainViewModel : ViewModel() {
 
 //SESSION
 
-    fun selectRoleAndUser(role: UserRole, user: User) {
-        _currentRole.value = role
-        _currentUser.value = user
-        clearCart()
+    fun loginWithPassword(email: String, pass: String, onResult: (Boolean, String?) -> Unit) {
+        viewModelScope.launch {
+            val user = repository.login(email, pass)
+            if (user != null) {
+                if (user.isBanned) {
+                    onResult(false, "Your account has been banned.")
+                } else {
+                    _currentUser.value = user
+                    _currentRole.value = user.role
+                    clearCart()
+                    onResult(true, null)
+                }
+            } else {
+                onResult(false, "Invalid email or password.")
+            }
+        }
     }
 
-    fun loginDemoUser(username: String, role: UserRole) {
+    fun registerStudent(name: String, email: String, pass: String, onResult: (Boolean, String?) -> Unit) {
         viewModelScope.launch {
-            val user = repository.login(username, role)
+            val user = repository.register(name, email, pass, UserRole.STUDENT)
             if (user != null) {
                 _currentUser.value = user
-                _currentRole.value = role
+                _currentRole.value = user.role
                 clearCart()
+                onResult(true, null)
+            } else {
+                onResult(false, "Registration failed. Email might be in use.")
+            }
+        }
+    }
+    
+    fun registerOwner(name: String, email: String, pass: String, onResult: (Boolean, String?) -> Unit) {
+        viewModelScope.launch {
+            val user = repository.register(name, email, pass, UserRole.STALL_OWNER)
+            if (user != null) {
+                onResult(true, null)
+            } else {
+                onResult(false, "Registration failed.")
             }
         }
     }

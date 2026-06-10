@@ -93,8 +93,8 @@ interface ApiService {
 }
 
 // Request Models
-data class LoginRequest(val name: String, val role: String)
-data class RegisterRequest(val name: String, val email: String, val role: String)
+data class LoginRequest(val email: String, val password: String)
+data class RegisterRequest(val name: String, val email: String, val password: String, val role: String)
 data class CreateStallRequest(val name: String, val description: String, val location: String, val ownerId: Int)
 data class MenuItemRequest(val name: String, val description: String, val price: Double, val category: String)
 data class PlaceOrderRequest(val studentId: Int, val stallId: Int, val items: List<OrderItemsRequest>, val pickupTime: String)
