@@ -884,7 +884,7 @@ fun AddEditFoodItemScreen(
                 )
 
                 var categoryExpanded by remember { mutableStateOf(false) }
-                val categoryOptions = listOf("Popular Choices", "Signature Burgers", "Sides", "Rice Bowls", "Wraps", "Drinks")
+                val categoryOptions = listOf("Food", "Drinks")
 
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedButton(

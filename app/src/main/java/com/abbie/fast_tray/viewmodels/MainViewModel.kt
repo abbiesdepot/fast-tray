@@ -3,6 +3,7 @@ package com.abbie.fast_tray.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.abbie.fast_tray.models.*
+import com.abbie.fast_tray.network.RetrofitClient
 import com.abbie.fast_tray.repositories.FastTrayRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -82,6 +83,7 @@ class MainViewModel : ViewModel() {
                 } else {
                     _currentUser.value = user
                     _currentRole.value = user.role
+                    RetrofitClient.setCurrentUser(user.id, user.role.name, user.email)
                     clearCart()
                     onResult(true, null)
                 }
@@ -97,6 +99,7 @@ class MainViewModel : ViewModel() {
             if (user != null) {
                 _currentUser.value = user
                 _currentRole.value = user.role
+                RetrofitClient.setCurrentUser(user.id, user.role.name, user.email)
                 clearCart()
                 onResult(true, null)
             } else {
@@ -119,6 +122,7 @@ class MainViewModel : ViewModel() {
     fun logout() {
         _currentUser.value = null
         _currentRole.value = null
+        RetrofitClient.setCurrentUser(null, null, null)
         clearCart()
     }
 
