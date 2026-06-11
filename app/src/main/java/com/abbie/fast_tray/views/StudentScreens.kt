@@ -239,14 +239,7 @@ fun BrowseStallsScreen(
         }
 
         items(filteredStalls) { stall ->
-            val status = when (stall.id) {
-                1 -> "OPEN"
-                2 -> "OPEN"
-                3 -> "BUSY"
-                4 -> "OPEN"
-                5 -> "OPEN"
-                else -> "CLOSED"
-            }
+            val status = if (stall.id == 3) "BUSY" else "OPEN"
 
             val waitTime = when (stall.id) {
                 1 -> "10 MINS"
@@ -254,7 +247,7 @@ fun BrowseStallsScreen(
                 3 -> "25 MINS"
                 4 -> "5 MINS"
                 5 -> "FASTEST QUEUE"
-                else -> "N/A"
+                else -> "10 MINS"
             }
 
             val statusColor = when (status) {
