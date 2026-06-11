@@ -24,6 +24,7 @@ import com.abbie.fast_tray.models.*
 import com.abbie.fast_tray.ui.theme.*
 import com.abbie.fast_tray.viewmodels.MainViewModel
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 
 @Composable
 fun AdminDashboardScreen(
@@ -327,6 +328,7 @@ fun AdminUserManagementScreen(
                         onValueChange = { ownerPass = it },
                         label = { Text("Password") },
                         singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
                         colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangePrimary),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth()
