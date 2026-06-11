@@ -539,7 +539,7 @@ fun StallDetailScreen(
             categories.forEach { category ->
                 item {
                     Text(
-                        text = category.uppercase(),
+                        text = (category ?: "Uncategorized").uppercase(),
                         fontWeight = FontWeight.Bold,
                         color = SlateMedium,
                         fontSize = 14.sp,
@@ -573,8 +573,8 @@ fun StallDetailScreen(
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = item.description,
-                                        fontSize = 12.sp,
+                                        text = item.description ?: "",
+                                        fontSize = 11.sp,
                                         color = SlateLight,
                                         lineHeight = 16.sp
                                     )
@@ -712,7 +712,7 @@ fun AddToCartDialog(
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = menuItem.description,
+                    text = menuItem.description ?: "",
                     fontSize = 12.sp,
                     color = SlateLight,
                     textAlign = TextAlign.Center,

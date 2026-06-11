@@ -772,7 +772,7 @@ fun MenuManagementScreen(
                                     color = SlateMedium
                                 )
                                 Text(
-                                    text = item.category,
+                                    text = item.category ?: "Uncategorized",
                                     color = OrangePrimary,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
