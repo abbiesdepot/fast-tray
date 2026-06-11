@@ -50,12 +50,12 @@ class MainViewModel : ViewModel() {
 
     init {
         viewModelScope.launch {
-            // Fetch initial data
-            repository.fetchStalls()
-            repository.fetchUsers()
-
             currentUser.collect { user ->
                 if (user != null) {
+                    // Fetch initial data
+                    repository.fetchStalls()
+                    repository.fetchUsers()
+
                     // Fetch relevant data based on user type
                     if (user.role == UserRole.STUDENT) {
                         repository.fetchStudentOrders(user.id)
@@ -197,6 +197,12 @@ class MainViewModel : ViewModel() {
 
     fun updateSelectedCategory(category: String) {
         _selectedCategory.value = category
+    }
+
+    fun fetchMenuItemsForStall(stallId: Int) {
+        viewModelScope.launch {
+            repository.fetchMenuItems(stallId)
+        }
     }
 
     //INI ORDER ACTIONS

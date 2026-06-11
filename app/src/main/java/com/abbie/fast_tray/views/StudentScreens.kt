@@ -156,7 +156,7 @@ fun BrowseStallsScreen(
 
     val filteredStalls = stalls.filter { stall ->
         val matchesSearch = stall.name.contains(searchQuery, ignoreCase = true) ||
-                stall.description.contains(searchQuery, ignoreCase = true)
+                (stall.description?.contains(searchQuery, ignoreCase = true) ?: false)
         val matchesTag = when (selectedTag) {
             "All Stalls" -> true
             "Halal" -> stall.name.contains("Grill", ignoreCase = true) || stall.name.contains("Asian", ignoreCase = true)
@@ -332,7 +332,7 @@ fun BrowseStallsScreen(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = stall.description,
+                        text = stall.description ?: "",
                         fontSize = 12.sp,
                         color = SlateLight,
                         lineHeight = 16.sp
@@ -468,6 +468,10 @@ fun StallDetailScreen(
 
     var selectedItemForCart by remember { mutableStateOf<MenuItem?>(null) }
 
+    LaunchedEffect(stallId) {
+        viewModel.fetchMenuItemsForStall(stallId)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -514,7 +518,7 @@ fun StallDetailScreen(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = stall.description,
+                    text = stall.description ?: "",
                     color = SlateLight,
                     fontSize = 13.sp,
                     lineHeight = 18.sp

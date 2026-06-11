@@ -482,7 +482,7 @@ fun AdminStallManagementScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = stall.description,
+                            text = stall.description ?: "",
                             fontSize = 12.sp,
                             color = SlateMedium,
                             lineHeight = 16.sp
