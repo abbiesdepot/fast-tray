@@ -213,7 +213,12 @@ class MainViewModel : ViewModel() {
     //INI ORDER ACTIONS
     fun cancelOrder(orderId: Int, stallId: Int) {
         viewModelScope.launch {
-            repository.updateOrderStatus(orderId, stallId, OrderStatus.CANCELLED)
+            val user = _currentUser.value
+            if (user != null && user.role == UserRole.STUDENT) {
+                repository.cancelOrderStudent(orderId, user.id)
+            } else {
+                repository.updateOrderStatus(orderId, stallId, OrderStatus.CANCELLED)
+            }
         }
     }
 

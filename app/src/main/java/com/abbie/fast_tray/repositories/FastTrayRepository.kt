@@ -198,6 +198,15 @@ object FastTrayRepository {
         } else null
     }
 
+    suspend fun cancelOrderStudent(orderId: Int, studentId: Int): Boolean {
+        val response = api.cancelOrder(orderId)
+        if (response.isSuccessful) {
+            fetchStudentOrders(studentId)
+            return true
+        }
+        return false
+    }
+
     suspend fun updateOrderStatus(orderId: Int, stallId: Int, newStatus: OrderStatus, rejectionReason: String = "" ): Boolean {
         val response = api.updateOrderStatus(orderId, UpdateStatusRequest(newStatus.name, rejectionReason))
         if (response.isSuccessful) {

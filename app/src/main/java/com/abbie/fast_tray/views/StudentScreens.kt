@@ -1248,7 +1248,10 @@ fun OrderTrackingScreen(
 
         if (order.status == OrderStatus.PENDING) {
             Button(
-                onClick = { viewModel.cancelOrder(order.id, order.stallId) },
+                onClick = { 
+                    viewModel.cancelOrder(order.id, order.stallId)
+                    onNavigateBack()
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = ColorDanger),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
