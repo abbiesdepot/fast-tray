@@ -53,8 +53,13 @@ class MainViewModel : ViewModel() {
             currentUser.collect { user ->
                 if (user != null) {
                     // Fetch initial data
-                    repository.fetchStalls()
-                    repository.fetchUsers()
+                    if (user.role == UserRole.ADMIN) {
+                        repository.fetchAdminStalls()
+                        repository.fetchAdminUsers()
+                    } else {
+                        repository.fetchStalls()
+                        repository.fetchUsers()
+                    }
 
                     // Fetch relevant data based on user type
                     if (user.role == UserRole.STUDENT) {
@@ -110,7 +115,7 @@ class MainViewModel : ViewModel() {
     
     fun registerOwner(name: String, email: String, pass: String, onResult: (Boolean, String?) -> Unit) {
         viewModelScope.launch {
-            val user = repository.register(name, email, pass, UserRole.STALL_OWNER)
+            val user = repository.register(name, email, pass, UserRole.STALL_OWNER, isAdmin = true)
             if (user != null) {
                 onResult(true, null)
             } else {
@@ -248,7 +253,7 @@ class MainViewModel : ViewModel() {
 
     fun toggleStallOpenClosed(stallId: Int) {
         viewModelScope.launch {
-            repository.toggleStallActive(stallId)
+            repository.toggleStallActive(stallId, isAdmin = true)
         }
     }
 
@@ -279,19 +284,19 @@ class MainViewModel : ViewModel() {
     //    INI ADMIN
     fun registerNewStall(name: String, description: String, location: String, ownerId: Int) {
         viewModelScope.launch {
-            repository.addStall(name, description, location, ownerId)
+            repository.addStall(name, description, location, ownerId, isAdmin = true)
         }
     }
 
     fun warnUserAccount(userId: Int) {
         viewModelScope.launch {
-            repository.warnUser(userId)
+            repository.warnUser(userId, isAdmin = true)
         }
     }
 
     fun toggleBanUserAccount(userId: Int) {
         viewModelScope.launch {
-            repository.toggleBanUser(userId)
+            repository.toggleBanUser(userId, isAdmin = true)
         }
     }
 }

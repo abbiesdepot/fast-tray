@@ -46,6 +46,28 @@ object FastTrayRepository {
         }
     }
 
+    suspend fun fetchAdminUsers() {
+        try {
+            val response = api.adminGetUsers()
+            if (response.isSuccessful) {
+                _users.value = response.body()?.data ?: emptyList()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun fetchAdminStalls() {
+        try {
+            val response = api.adminGetStalls()
+            if (response.isSuccessful) {
+                _stalls.value = response.body()?.data ?: emptyList()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     suspend fun fetchMenuItems(stallId: Int) {
         try {
             val response = api.getMenuItems(stallId)
@@ -90,12 +112,12 @@ object FastTrayRepository {
         }
     }
 
-    suspend fun register(name: String, email: String, password: String, role: UserRole): User? {
+    suspend fun register(name: String, email: String, password: String, role: UserRole, isAdmin: Boolean = false): User? {
         return try {
             val response = api.register(RegisterRequest(name, email, password, role.name))
             if (response.isSuccessful) {
                 val newUser = response.body()?.data
-                fetchUsers()
+                if (isAdmin) fetchAdminUsers() else fetchUsers()
                 newUser
             } else null
         } catch (e: Exception) {
@@ -103,38 +125,38 @@ object FastTrayRepository {
         }
     }
 
-    suspend fun warnUser(userId: Int): User? {
+    suspend fun warnUser(userId: Int, isAdmin: Boolean = false): User? {
         val response = api.warnUser(userId)
         return if (response.isSuccessful) {
             val updated = response.body()?.data
-            fetchUsers()
+            if (isAdmin) fetchAdminUsers() else fetchUsers()
             updated
         } else null
     }
 
-    suspend fun toggleBanUser(userId: Int): User? {
+    suspend fun toggleBanUser(userId: Int, isAdmin: Boolean = false): User? {
         val response = api.banUser(userId)
         return if (response.isSuccessful) {
             val updated = response.body()?.data
-            fetchUsers()
+            if (isAdmin) fetchAdminUsers() else fetchUsers()
             updated
         } else null
     }
 
-    suspend fun addStall(name: String, description: String, location: String, ownerId: Int): Stall? {
+    suspend fun addStall(name: String, description: String, location: String, ownerId: Int, isAdmin: Boolean = false): Stall? {
         val response = api.createStall(CreateStallRequest(name, description, location, ownerId))
         return if (response.isSuccessful) {
             val newStall = response.body()?.data
-            fetchStalls()
+            if (isAdmin) fetchAdminStalls() else fetchStalls()
             newStall
         } else null
     }
 
-    suspend fun toggleStallActive(stallId: Int): Stall? {
+    suspend fun toggleStallActive(stallId: Int, isAdmin: Boolean = false): Stall? {
         val response = api.toggleStall(stallId)
         return if (response.isSuccessful) {
             val updated = response.body()?.data
-            fetchStalls()
+            if (isAdmin) fetchAdminStalls() else fetchStalls()
             updated
         } else null
     }
