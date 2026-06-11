@@ -1260,7 +1260,10 @@ fun OrderTrackingScreen(
             }
         } else if (order.status == OrderStatus.READY) {
             Button(
-                onClick = { viewModel.completeOrder(order.id, order.stallId) },
+                onClick = { 
+                    viewModel.completeOrder(order.id, order.stallId)
+                    onNavigateBack()
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = ColorSuccess),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()

@@ -242,7 +242,12 @@ class MainViewModel : ViewModel() {
 
     fun completeOrder(orderId: Int, stallId: Int) {
         viewModelScope.launch {
-            repository.updateOrderStatus(orderId, stallId, OrderStatus.COMPLETED)
+            val user = _currentUser.value
+            if (user != null && user.role == UserRole.STUDENT) {
+                repository.updateOrderStatus(orderId, stallId, OrderStatus.COMPLETED, studentId = user.id)
+            } else {
+                repository.updateOrderStatus(orderId, stallId, OrderStatus.COMPLETED)
+            }
         }
     }
 

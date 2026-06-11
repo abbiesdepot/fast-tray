@@ -207,10 +207,10 @@ object FastTrayRepository {
         return false
     }
 
-    suspend fun updateOrderStatus(orderId: Int, stallId: Int, newStatus: OrderStatus, rejectionReason: String = "" ): Boolean {
+    suspend fun updateOrderStatus(orderId: Int, stallId: Int, newStatus: OrderStatus, rejectionReason: String = "", studentId: Int? = null): Boolean {
         val response = api.updateOrderStatus(orderId, UpdateStatusRequest(newStatus.name, rejectionReason))
         if (response.isSuccessful) {
-            fetchStallQueue(stallId)
+            if (studentId != null) fetchStudentOrders(studentId) else fetchStallQueue(stallId)
             return true
         }
         return false
